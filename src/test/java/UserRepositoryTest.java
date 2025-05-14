@@ -1,31 +1,31 @@
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.repository.mappers.UserRowMapper;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
+import ru.yandex.practicum.filmorate.FilmorateApplication;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.repository.mappers.UserRowMapper;
 import ru.yandex.practicum.filmorate.repository.user.UserRepository;
-import ru.yandex.practicum.filmorate.repository.user.UserRepositoryInterface;
 
 import java.time.LocalDate;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @JdbcTest
-@Transactional
+@AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Import({UserRepository.class, UserRowMapper.class})
-@ActiveProfiles("test")
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@ContextConfiguration(classes = FilmorateApplication.class)
 public class UserRepositoryTest {
-    private final UserRepositoryInterface userRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
     private Long firstUserId;
     private Long secondUserId;
 
@@ -58,8 +58,8 @@ public class UserRepositoryTest {
     @Test
     void savedUserShouldMatchInitialData() {
         User savedUser = userRepository.getUserById(firstUserId).orElseThrow();
-        assertThat(savedUser.getLogin()).isEqualTo("test-login1");
-        assertThat(savedUser.getName()).isEqualTo("Test User 1");
+        assertThat(savedUser.getLogin()).isEqualTo("first-user");
+        assertThat(savedUser.getName()).isEqualTo("First Test User");
         assertThat(savedUser.getBirthday()).isEqualTo(LocalDate.of(2010, 12, 15));
     }
 
@@ -88,7 +88,6 @@ public class UserRepositoryTest {
     @Test
     void shouldContainAllCreatedUsers() {
         List<User> users = userRepository.getAllUsers();
-
         assertThat(users).hasSize(2);
         assertThat(users.stream().map(User::getId))
                 .contains(firstUserId, secondUserId);
